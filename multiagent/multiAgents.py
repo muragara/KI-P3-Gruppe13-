@@ -274,7 +274,44 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        _, action = self.expectimax(gameState, 0, 0)
+        return action
+
+    def expectimax(self, gameState, depth, agentIndex):
+        # Check if game is over or depth is reached
+        if depth == self.depth or gameState.isWin() or gameState.isLose():
+            return self.evaluationFunction(gameState), None
+
+        numAgents = gameState.getNumAgents()
+        isPacman = (agentIndex == 0)
+
+        if isPacman:
+            return self.maxValue(gameState, depth, agentIndex)
+        else:
+            return self.expValue(gameState, depth, agentIndex)
+
+    def maxValue(self, gameState, depth, agentIndex):
+        v = float('-inf')
+        bestAction = None
+        for action in gameState.getLegalActions(agentIndex):
+            successor = gameState.generateSuccessor(agentIndex, action)
+            successorValue, _ = self.expectimax(successor, depth, (agentIndex + 1) % gameState.getNumAgents())
+            if successorValue > v:
+                v = successorValue
+                bestAction = action
+        return v, bestAction
+
+    def expValue(self, gameState, depth, agentIndex):
+        v = 0
+        actions = gameState.getLegalActions(agentIndex)
+        p = 1.0 / len(actions)
+        for action in actions:
+            nextAgent = (agentIndex + 1) % gameState.getNumAgents()
+            nextDepth = depth + 1 if nextAgent == 0 else depth
+            successor = gameState.generateSuccessor(agentIndex, action)
+            successorValue, _ = self.expectimax(successor, nextDepth, nextAgent)
+            v += p * successorValue
+        return v, None
 
 
 def betterEvaluationFunction(currentGameState: GameState):
